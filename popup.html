@@ -1,6 +1,7 @@
 <!DOCTYPE html>
   <html>
     <head>
+      <link rel="stylesheet" href="styles.css">
       <style>
         button {
           height: 30px;
@@ -10,6 +11,30 @@
       </style>
     </head>
     <body>
-      <button id="changeColor"></button>
+      <h1>Phobia</h1>
+      <br>
+
+      <h2 class="label">Enabled: </h2>
+      <!-- Rounded switch -->
+      <label class="switch">
+        <input type="checkbox">
+        <span class="slider round"></span>
+      </label>
+
+      <br>
+
+      <h2 class="label">Strict mode:</h2>
+      <!-- Rounded switch -->
+      <label class="switch">
+        <input type="checkbox">
+        <span class="slider round"></span>
+      </label>
+
+      <br>
+
+      <h2>Filters:</h2>
+      <div id="filters"></div>
+
+      <script src="popup.js"></script>
     </body>
   </html>
