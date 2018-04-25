@@ -2,7 +2,7 @@
     "name": "Phobia",
     "version": "0.1",
     "description": "Coming soon",
-    "permissions": ["activeTab", "declarativeContent", "storage"],
+    "permissions": ["webNavigation", "*://*/*", "activeTab", "declarativeContent", "storage"],
     "background": {
       "scripts": ["background.js"],
       "persistent": false
