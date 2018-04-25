@@ -1,18 +1,23 @@
+  const N = 3;
   const titles = ['Arachnophobia', 'Insectophobia', 'Emetophobia'];
+  const descriptions = ['Spiders', 'Insects', 'Vomit'];
   const filters = document.getElementById('filters');
-  function constructFilters(titles) {
-      for (let item of titles) {
+  function constructFilters(titles, descriptions) {
+      for (let i = 0; i < N; ++i) {
           let filter = document.createElement('div');
           let br = document.createElement('br');
           let title = document.createElement('span');
-          title.innerText = item;
+          title.innerText = titles[i];
           title.classList.add('label');
+          title.setAttribute('title', descriptions[i]);
 
           let label = document.createElement('label');
           label.classList.add('switch');
 
           let input = document.createElement('input');
           input.setAttribute('type', 'checkbox');
+          input.classList.add('filter');
+
           let span = document.createElement('span');
           span.classList.add('slider');
           span.classList.add('round');
@@ -27,13 +32,7 @@
           filters.appendChild(filter);
       }
   }
-  constructFilters(titles);
-
-    /*chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      chrome.tabs.executeScript(
-          tabs[0].id,
-          {code: 'const images = document.getElementsByTagName("img"); for (let image of images) { image.src = "http://www.solidbackgrounds.com/images/2560x1440/2560x1440-gray-solid-color-background.jpg"; }'});
-    });*/
+  constructFilters(titles, descriptions);
 
     chrome.storage.sync.get('enabled', function(data) {
         if (data.enabled)
@@ -54,3 +53,4 @@
         chrome.storage.sync.set({strictEnabled: !strictSlider.getAttribute('checked')}, 
         function() { });
     });
+    
