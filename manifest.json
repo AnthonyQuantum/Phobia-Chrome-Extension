@@ -4,7 +4,7 @@
     "description": "Coming soon",
     "permissions": ["webNavigation", "*://*/*", "activeTab", "declarativeContent", "storage"],
     "background": {
-      "scripts": ["background.js"],
+      "scripts": ["config.js", "background.js"],
       "persistent": false
     },
     "page_action": {

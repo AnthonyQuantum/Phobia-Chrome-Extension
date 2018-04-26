@@ -1,3 +1,24 @@
+chrome.runtime.onInstalled.addListener(function() {
+  chrome.storage.sync.set({enabled: true}, function() {});
+  chrome.storage.sync.set({strictEnabled: false}, function() {});
+  for (let item of config.phobias)
+  {
+    let obj = {};
+    obj[item.title] = true;
+    chrome.storage.sync.set(obj, function() {});
+  }
+});
+
+chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+  chrome.declarativeContent.onPageChanged.addRules([{
+    conditions: [new chrome.declarativeContent.PageStateMatcher({
+      pageUrl: {schemes: ['https', 'http']},
+    })
+    ],
+        actions: [new chrome.declarativeContent.ShowPageAction()]
+  }]);
+})
+
 chrome.webNavigation.onDOMContentLoaded.addListener(function() {
   chrome.storage.sync.get('enabled', function(data) {
     if (data.enabled && !data.strictEnabled)
@@ -5,15 +26,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(function() {
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.executeScript(
             tabs[0].id,
-            {code: 'const allText = document.all[0].innerText;\
-                    if(allText.indexOf("spider") > -1) {\
-                      console.log("Blocked!");\
-                      const images = document.getElementsByTagName("img");\
-                      for (let image of images)\
-                      {\
-                        image.src = "http://www.htmlcsscolor.com/preview/16x16/CDCDCD.png"\
-                      }\
-                    }'});
+            {file: 'blockImages.js'});
       });
     }
 });
@@ -35,17 +48,3 @@ chrome.storage.sync.get('strictEnabled', function(data) {
 });
 
 });
-chrome.runtime.onInstalled.addListener(function() {
-    chrome.storage.sync.set({enabled: true}, function() {});
-    chrome.storage.sync.set({strictEnabled: false}, function() {});
-    chrome.storage.sync.set({Arachnophobia: true}, function() {});
-  });
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-    chrome.declarativeContent.onPageChanged.addRules([{
-      conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {schemes: ['https', 'http']},
-      })
-      ],
-          actions: [new chrome.declarativeContent.ShowPageAction()]
-    }]);
-  })

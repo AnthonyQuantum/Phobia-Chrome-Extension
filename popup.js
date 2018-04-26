@@ -1,21 +1,30 @@
-  const N = 3;
-  const titles = ['Arachnophobia', 'Insectophobia', 'Emetophobia'];
-  const descriptions = ['Spiders', 'Insects', 'Vomit'];
   const filters = document.getElementById('filters');
-  function constructFilters(titles, descriptions) {
-      for (let i = 0; i < N; ++i) {
-          let filter = document.createElement('div');
+  function constructFilters() {
+      let checked = false;
+      for (let i = 0; i < config.N; ++i) {
+        chrome.storage.sync.get(config.phobias[i].title, function(data) {
+            if (data[config.phobias[i].title])
+                checked = true;
+            else
+                checked = false;
+        });
+
+          let filter = document.createElement('tr');
+          let firstColumn = document.createElement('td');
+          let secondColumn = document.createElement('td');
+
           let br = document.createElement('br');
           let title = document.createElement('span');
-          title.innerText = titles[i];
+          title.innerText = config.phobias[i].title;
           title.classList.add('label');
-          title.setAttribute('title', descriptions[i]);
+          title.setAttribute('title', config.phobias[i].description);
 
           let label = document.createElement('label');
           label.classList.add('switch');
 
           let input = document.createElement('input');
           input.setAttribute('type', 'checkbox');
+          input.setAttribute('checked', checked);
           input.classList.add('filter');
 
           let span = document.createElement('span');
@@ -25,14 +34,17 @@
           label.appendChild(input);
           label.appendChild(span);
 
-          filter.appendChild(title);
-          filter.appendChild(label);
-          filter.appendChild(br);
+        firstColumn.appendChild(title);
+        secondColumn.appendChild(label);
+
+          filter.appendChild(firstColumn);
+          filter.appendChild(secondColumn);
+
 
           filters.appendChild(filter);
       }
   }
-  constructFilters(titles, descriptions);
+  constructFilters();
 
     chrome.storage.sync.get('enabled', function(data) {
         if (data.enabled)
@@ -53,4 +65,23 @@
         chrome.storage.sync.set({strictEnabled: !strictSlider.getAttribute('checked')}, 
         function() { });
     });
+
+    const inputs = document.getElementsByClassName('filter');
+    let filterInputs = [];
+    for (let item of inputs)
+    {
+        if (item.id != 'enabled-slider' && item.id != 'strict-slider')
+        {
+            filterInputs.push(item);
+        }
+    }
+    for (var i = 0; i < config.N; i++)
+    {
+        filterInputs[i].addEventListener('click', function() {
+            let obj = {};
+            console.log("read " + i);
+            obj[config.phobias[i].description] = !filterInputs[i].getAttribute('checked');
+            chrome.storage.sync.set(obj, function() { });
+        });            
+    }
     
