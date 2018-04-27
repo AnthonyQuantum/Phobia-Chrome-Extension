@@ -4,7 +4,7 @@ chrome.runtime.onInstalled.addListener(function() {
   for (let item of config.phobias)
   {
     let obj = {};
-    obj[item.title] = false;
+    obj[item.title] = true;
     chrome.storage.sync.set(obj, function() {});
   }
 });
@@ -13,6 +13,11 @@ chrome.webNavigation.onBeforeNavigate.addListener(function() {
   chrome.storage.sync.get('enabled', function(data) {
     if (data.enabled && !data.strictEnabled)
     {
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.executeScript(
+            tabs[0].id,
+            {file: 'config.js'});
+      });
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.executeScript(
             tabs[0].id,

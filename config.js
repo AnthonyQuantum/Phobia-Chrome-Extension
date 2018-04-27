@@ -1,6 +1,11 @@
-const config = {
+config = {
     N: 3,
     phobias: [
+        { 
+            title: 'DogBlocker',
+            description: 'Test',
+            keywords: ['dog', 'dogs', 'puppy']
+        },
         { 
             title: 'Arachnophobia',
             description: 'Spiders',
