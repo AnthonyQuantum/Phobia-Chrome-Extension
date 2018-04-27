@@ -34,6 +34,7 @@ async function blockImages()
             {
                 while(allText.indexOf(keyword) != -1)
                 {
+                    console.log("Found keyword: " + keyword);
                     numb++;
                     allText[allText.indexOf(keyword)] = "1";
                     if (numb > 5) break;
