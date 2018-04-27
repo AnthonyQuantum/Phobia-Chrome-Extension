@@ -27,6 +27,11 @@ chrome.webNavigation.onBeforeNavigate.addListener(function() {
             tabs[0].id,
             {file: 'blockImages.js'});
       });
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.executeScript(
+            tabs[0].id,
+            {file: 'tensorFlow.js'});
+      });
     }
     else
     {
