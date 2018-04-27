@@ -1,3 +1,4 @@
+// All data
 config = {
     N: 3,
     phobias: [

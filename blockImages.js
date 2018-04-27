@@ -1,11 +1,20 @@
 async function blockImages()
 {
+    // Make all HTML visible
+    const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
+
+    // Get all text and images from the current page
     const allText = document.all[0].innerText.toLowerCase();
     const images = document.getElementsByTagName("img");
+
+    // Set initial values
     let filterOn = false;
     let shouldBlock = false;
+
+    // Perform the analysis for each phobia in the list
     for (let phobia of config.phobias)
     {
+        // Checks whether filter is ON
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
                 filterOn = data[phobia.title];
@@ -13,23 +22,30 @@ async function blockImages()
             });
         });
 
+        // Wait for promise to complete
         let result = await promise;
         console.log("Filter is " + filterOn);
 
+        // If filter is ON, check whether page contains any of the keywords
         if (filterOn)
         {
+            let numb = 0;
             for (let keyword of phobia.keywords)
             {
-                if (allText.indexOf(keyword) > -1)
+                while(allText.indexOf(keyword) != -1)
                 {
-                    shouldBlock = true;
-                    break;
+                    numb++;
+                    allText[allText.indexOf(keyword)] = "1";
+                    if (numb > 5) break;
                 }
-            
             }
-            console.log("Should block: " + shouldBlock);   
+            if (numb > 5) shouldBlock = true;
+            
+            console.log("Found " + numb + " items"); 
+            console.log("Should block: " + shouldBlock);  
         }
 
+        // Block all images if needed
         for (let image of images)
         {
             if (shouldBlock)
@@ -43,7 +59,8 @@ async function blockImages()
             image.style.visibility = 'visible';
         }
 
-        shouldBlock = false;
+        // If images were blocked, stop the loop
+        if (shouldBlock) break;
     }
     console.log("Blocking completed!-------------------------------------------------");
 }
