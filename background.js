@@ -15,23 +15,16 @@ chrome.webNavigation.onBeforeNavigate.addListener(function() {
   chrome.storage.sync.get('enabled', function(data) {
     if (data.enabled)
     {
-      // Load data from config.js
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.executeScript(
-            tabs[0].id,
-            {file: 'config.js'});
-      });
-      // Execute script for analyzing images and then blocking if needed
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.executeScript(
-            tabs[0].id,
-            {file: 'blockImages.js'});
-      });
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.executeScript(
-            tabs[0].id,
-            {file: 'tensorFlow.js'});
-      });
+      let scripts = ['tfjs.js', 'config.js', 'blockImages.js', 'tensorFlow.js'];
+
+      for (let script of scripts)
+      {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          chrome.tabs.executeScript(
+              tabs[0].id,
+              {file: script});
+        });
+      }
     }
     else
     {
