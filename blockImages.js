@@ -1,5 +1,8 @@
 async function blockImages()
 {
+    // Save start time
+    var a = performance.now();
+
     // Make all HTML visible
     const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
 
@@ -64,5 +67,32 @@ async function blockImages()
         if (shouldBlock) break;
     }
     console.log("Blocking completed!-------------------------------------------------");
+
+    // Save finish time
+    var b = performance.now();
+
+    // Calculate working time
+    console.log('Working time: ' + (b-a) + ' ms.');
 }
-blockImages();
+
+function testServer() {
+    const images = document.getElementsByTagName("img");
+    const image = images[7];
+    console.log("Src:");
+    console.log(image.src);
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log("Got response!");
+            console.log(this.responseText);
+        }
+    };
+    xhttp.open("GET", "https://still-citadel-11543.herokuapp.com/?q=" + image.src, true);
+    console.log("xhttp opened");
+    xhttp.send();
+    console.log("xhttp sent");
+}
+testServer();
+
+//blockImages();

@@ -15,7 +15,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function() {
   chrome.storage.sync.get('enabled', function(data) {
     if (data.enabled)
     {
-      let scripts = ['tfjs.js', 'config.js', 'blockImages.js', 'tensorFlow.js'];
+      let scripts = ['config.js', 'blockImages.js'];
 
       for (let script of scripts)
       {
