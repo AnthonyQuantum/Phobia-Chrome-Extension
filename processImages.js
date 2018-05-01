@@ -1,20 +1,21 @@
-async function processImages()
+// DISABLE COMMAS!!!!!!!!!!!!!!!!!!!!!!!
+
+async function processImages() //https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif
 {
     // Make all HTML visible
     const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
 
-    // Get all text and images from the current page
-    const allText = document.all[0].innerText.toLowerCase();
+    // Get all images from the current page
     const images = document.getElementsByTagName("img");
 
     // Set initial values
     let filterOn = false;
     let shouldBlock = false;
 
-    // Perform the analysis for each phobia in the list
+    // Checks which filters are ON
+    let filtersStatus = {};
     for (let phobia of config.phobias)
     {
-        // Checks whether filter is ON
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
                 filterOn = data[phobia.title];
@@ -24,98 +25,121 @@ async function processImages()
 
         // Wait for promise to complete
         let result = await promise;
-        console.log("Filter is " + filterOn);
+        filtersStatus[phobia.title] = filterOn;
+        console.log(phobia.title + " filter is " + filterOn);
+    }
 
-        // If filter is ON, check whether page contains any of the keywords
-        if (filterOn)
+    // Process each image on the page
+    for (let oneImage of images)
+    {
+        shouldBlock = false;
+        let imageKeywords;
+
+        for (let phobia of config.phobias)
         {
-            let numb = 0;
-            for (let keyword of phobia.keywords)
+            // If filter is ON, check whether page contains any of the keywords
+            if (filtersStatus[phobia.title])
             {
-                while(allText.indexOf(keyword) != -1)
-                {
-                    console.log("Found keyword: " + keyword);
-                    numb++;
-                    allText[allText.indexOf(keyword)] = "1";
-                    if (numb > 5) break;
-                }
-            }
-            if (numb > 5) shouldBlock = true;
-            
-            console.log("Found " + numb + " items"); 
-            console.log("Should block: " + shouldBlock);  
-        }
+                let processPromise = new Promise(async function func(resolve, reject)  {
+                    imageKeywords = await processImage(oneImage);
+                    resolve();
+                });
 
-        // Block all images if needed
-        for (let image of images)
-        {
+                let processResult = await processPromise;
+
+                let numb = 0;
+                for (let keyword of phobia.keywords)
+                {
+                    while(imageKeywords.indexOf(keyword) != -1)
+                    {
+                        console.log("Found keyword: " + keyword);
+                        numb++;
+                        imageKeywords[imageKeywords.indexOf(keyword)] = "1";
+                        if (numb > 2) break;
+                    }
+                }
+                if (numb > 2) shouldBlock = true;
+            
+                console.log("Found " + numb + " items"); 
+                console.log("Should block: " + shouldBlock);  
+            }
+            
+            // Block image if needed
             if (shouldBlock)
             {
-                image.removeAttribute('src');
-                image.style.maxHeight = '512px';
-                image.style.maxWidth = '512px';
-                image.style.background = '#000'
-                image.src = 'https://image.ibb.co/mOVzuH/warning.png';
+                oneImage.removeAttribute('src');
+                oneImage.style.maxHeight = '512px';
+                oneImage.style.maxWidth = '512px';
+                oneImage.style.background = '#000'
+                oneImage.src = 'https://image.ibb.co/mOVzuH/warning.png';
             }
-            image.style.visibility = 'visible';
-        }
-
-        // If images were blocked, stop the loop
-        if (shouldBlock) break;
-    }
-    console.log("Blocking completed!-------------------------------------------------");
-}
-
-function processImage(image)
-{
-    // Save start time
-    var a = performance.now();
-
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log("Got response:");
-            console.log(this.responseText);
-
-            // Save finish time
-            var b = performance.now();
-
-            // Calculate working time
-            console.log('Working time: ' + (b-a) + ' ms.');
+            else
+            {
+                oneImage.style.visibility = 'visible';
+            }
             
-            return this.responseText;
+            // If image was blocked, stop the loop
+            if (shouldBlock) break;
         }
-    };
 
-    const prefix = image.src.slice(0,4);
-
-    if (prefix == "http") // Absolute adress
-    {
-        xhttp.open("GET", "http://localhost:5000/?q=" + image.src + "&t=absolute", true);
-        xhttp.send();
+        console.log("One image processed-----------------------------------");
     }
-    else if (prefix == "data") // Base64 encoded
-    {
-        var path = "http://localhost:5000/?t=base64";
-        var data = JSON.stringify({image: image.src});
-        xhttp.open("POST", path, true);
-        xhttp.setRequestHeader('Content-Type', 'application/json');
-        xhttp.send(data);
-    }
-    else // Relative adress and other types
-    {
-        xhttp.open("GET", "http://localhost:5000/?q=" + window.location.href + "/" + image.src + "&t=relative", true);
-        xhttp.send();
-    }
-    console.log("Request sent");
+    console.log("Processing completed!-------------------------------------------------");
 }
 
-function testServer() {
+async function processImage(image)
+{
+    let imageText;
 
-    const images = document.getElementsByTagName("img");
-    const oneImage = images[5];
-    processImage(oneImage);
+    let imagePromise = new Promise((resolve, reject) => {
+        // Save start time
+        var a = performance.now();
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+
+                let words = this.responseText.replace(/,/g, '').toLowerCase();
+
+                console.log("Got response:");
+                console.log(words);
+            
+                // Save finish time
+                var b = performance.now();
+            
+                // Calculate working time
+                console.log('Working time: ' + (b-a) + ' ms.');
+
+                imageText =  this.responseText;
+                resolve();
+            }
+        };
+
+        const prefix = image.src.slice(0,4);
+
+        if (prefix == "http") // Absolute adress
+        {
+            xhttp.open("GET", "http://localhost:5000/?q=" + image.src + "&t=absolute", true);
+            xhttp.send();
+        }
+        else if (prefix == "data") // Base64 encoded
+        {
+            var path = "http://localhost:5000/?t=base64";
+            var data = JSON.stringify({image: image.src});
+            xhttp.open("POST", path, true);
+            xhttp.setRequestHeader('Content-Type', 'application/json');
+            xhttp.send(data);
+        }
+        else // Relative adress and other types
+        {
+            xhttp.open("GET", "http://localhost:5000/?q=" + window.location.href + "/" + image.src + "&t=relative", true);
+            xhttp.send();
+        }
+        console.log("Request sent");
+    });
+    
+    let processImageResult = await imagePromise;
+    return imageText;
 }
-testServer();
 
-//blockImages();
+processImages();

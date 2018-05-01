@@ -5,7 +5,7 @@ config = {
         { 
             title: 'DogBlocker',
             description: 'Test',
-            keywords: ['dog', 'dogs', 'puppy']
+            keywords: ['dog', 'dogs', 'puppy', 'labrador', 'retriever', 'kuvasz']
         },
         { 
             title: 'Arachnophobia',
