@@ -1,8 +1,5 @@
-async function blockImages()
+async function processImages()
 {
-    // Save start time
-    var a = performance.now();
-
     // Make all HTML visible
     const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
 
@@ -67,31 +64,57 @@ async function blockImages()
         if (shouldBlock) break;
     }
     console.log("Blocking completed!-------------------------------------------------");
-
-    // Save finish time
-    var b = performance.now();
-
-    // Calculate working time
-    console.log('Working time: ' + (b-a) + ' ms.');
 }
 
-function testServer() {
-    const images = document.getElementsByTagName("img");
-    const image = images[7];
-    console.log("Src:");
-    console.log(image.src);
+function processImage(image)
+{
+    // Save start time
+    var a = performance.now();
 
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            console.log("Got response!");
+            console.log("Got response:");
             console.log(this.responseText);
+
+            // Save finish time
+            var b = performance.now();
+
+            // Calculate working time
+            console.log('Working time: ' + (b-a) + ' ms.');
+            
+            return this.responseText;
         }
     };
-    xhttp.open("GET", "https://still-citadel-11543.herokuapp.com/?q=" + image.src, true);
-    console.log("xhttp opened");
-    xhttp.send();
-    console.log("xhttp sent");
+
+    const prefix = image.src.slice(0,4);
+
+    if (prefix == "http") // Absolute adress
+    {
+        xhttp.open("GET", "http://localhost:5000/?q=" + image.src + "&t=absolute", true);
+        xhttp.send();
+    }
+    else if (prefix == "data") // Base64 encoded
+    {
+        var path = "http://localhost:5000/?t=base64";
+        var data = JSON.stringify({image: image.src});
+        xhttp.open("POST", path, true);
+        xhttp.setRequestHeader('Content-Type', 'application/json');
+        xhttp.send(data);
+    }
+    else // Relative adress and other types
+    {
+        xhttp.open("GET", "http://localhost:5000/?q=" + window.location.href + "/" + image.src + "&t=relative", true);
+        xhttp.send();
+    }
+    console.log("Request sent");
+}
+
+function testServer() {
+
+    const images = document.getElementsByTagName("img");
+    const oneImage = images[5];
+    processImage(oneImage);
 }
 testServer();
 

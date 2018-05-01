@@ -15,7 +15,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function() {
   chrome.storage.sync.get('enabled', function(data) {
     if (data.enabled)
     {
-      let scripts = ['config.js', 'blockImages.js'];
+      let scripts = ['config.js', 'processImages.js'];
 
       for (let script of scripts)
       {
