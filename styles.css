@@ -37,11 +37,11 @@
   }
   
   input:checked + .slider {
-    background-color: #2196F3;
+    background-color: cadetblue;
   }
   
   input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px cadetblue;
   }
   
   input:checked + .slider:before {
@@ -67,6 +67,8 @@
 
   body {
       width: 200px;
+      background: #01796f;
+      color: white;
   }
 
   h1 {
@@ -118,4 +120,17 @@
 .tooltip:hover .tooltiptext {
   visibility: visible;
   opacity: 1;
+}
+
+img, h1 {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+img {
+  margin-left: 20px;
+}
+
+h1 {
+  margin-left: 10px;
 }

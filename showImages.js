@@ -1,4 +1,5 @@
 // Make all images visible
+console.log("showed");
 const images = document.getElementsByTagName("img");
 for (let image of images)
 {

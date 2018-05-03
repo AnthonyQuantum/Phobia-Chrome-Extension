@@ -26,7 +26,8 @@
     "content_scripts": [
       {
         "matches": ["*://*/*"],
-        "css": ["blocker.css"]
+        "css": ["blocker.css"],
+        "js": ["config.js", "processImages.js"]
       }],
     "manifest_version": 2
   }
