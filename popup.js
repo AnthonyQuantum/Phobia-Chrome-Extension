@@ -52,7 +52,7 @@ async function constructFilters() {
 constructFilters();
 
 // Set enable/disable slides their values
-let sliders = ['enabled', 'strictEnabled'];
+let sliders = ['enabled', 'warningEnabled'];
 for (let slider of sliders)
 {
     // DEV what is it for ???

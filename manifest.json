@@ -1,7 +1,7 @@
 {
     "name": "Phobia",
-    "version": "0.1",
-    "description": "Coming soon",
+    "version": "1.0",
+    "description": "Phobia will make your web browsing more comfortable by blocking images and pages that contain something you are afraid of.",
     "permissions": ["webNavigation", "*://*/*", "activeTab", "declarativeContent", "storage"],
     "background": {
       "scripts": ["config.js", "background.js"],
