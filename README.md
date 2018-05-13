@@ -5,4 +5,4 @@ It scans all images you see on the internet (absolutely privately) and hides the
 
 # How it works?
 Phobia uses pre-trained Inception v3 model and simple image classifier.
-![Alt text](images/structure.png)
+![Alt text](images/Structure.png)
