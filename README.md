@@ -4,5 +4,5 @@ Phobia application will make your web browsing more comfortable by blocking imag
 It scans all images you see on the internet (absolutely privately) and hides them, if they contain something nasty. Also is has an option to hide the whole page.
 
 # How it works?
-Phobia uses pre-trained Inception v3 model and simple classifier for image recognition.
-![Alt text](images/structure.png?raw=true)
+Phobia uses pre-trained Inception v3 model and simple image classifier.
+![Alt text](images/structure.png)
