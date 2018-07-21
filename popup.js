@@ -3,7 +3,7 @@ async function constructFilters() {
     const filters = document.getElementById('filters');
 
     let checked = false;
-    for (let phobia of config.phobias) {
+    for (let phobia of CONFIG.PHOBIAS) {
 
         // Checks whether filter is ON
         let promise = new Promise((resolve, reject) => {

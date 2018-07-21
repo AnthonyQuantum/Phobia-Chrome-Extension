@@ -1,7 +1,8 @@
-var SERVER_URL =  'https://still-citadel-11543.herokuapp.com/'; //'http://localhost:5000/';
+var SERVER_URL = CONFIG.LOCAL_URL;
 var BLOCKED_IMAGE_URL = SERVER_URL + 'warning.png';
 var LOGO_IMAGE_URL = SERVER_URL + 'logo.png';
 
+if (!CONFIG.CONSOLE_LOGGING) console.log = function() {};
 
 var requestStartTime, requestEndTime;
 
@@ -20,7 +21,7 @@ async function processImages()
     // Checks which filters are ON
     let filtersStatus = {};
     console.log("Filters:--------------------------------");
-    for (let phobia of config.phobias)
+    for (let phobia of CONFIG.PHOBIAS)
     {
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
@@ -32,7 +33,8 @@ async function processImages()
         // Wait for promise to complete
         let result = await promise;
         filtersStatus[phobia.title] = filterOn;
-        console.log(phobia.title + " filter is " + filterOn);
+        let textColor = filterOn ? "#00ff00" : "#ff0000";
+        console.log(phobia.title + " filter | " + "%c" + getStatus(filterOn), "color: " + textColor);
     }
     console.log("----------------------------------------");
     console.log("\n");
@@ -53,7 +55,7 @@ async function processImages()
 
         let processResult = await processPromise;
 
-        for (let phobia of config.phobias)
+        outer: for (let phobia of CONFIG.PHOBIAS)
         {
             // If filter is ON, check whether page contains any of the keywords
             if (filtersStatus[phobia.title])
@@ -64,17 +66,17 @@ async function processImages()
                     var regex = new RegExp('\\b' + keyword + '\\b');
                     while(imageKeywords.search(regex) != -1)
                     {
-                        console.log("Found keyword: " + keyword);
+                        //console.log("Found keyword: " + keyword);
                         numb++;
                         imageKeywords[imageKeywords.search(regex)] = "1";
-                        if (numb > 2) break;
+                        if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) break;
                     }
                 }
-                if (numb > 2) shouldBlock = true;
+                if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) shouldBlock = true;
             
-                console.log("Found " + numb + " items"); 
-                console.log("Should block: " + shouldBlock);
-                console.log("\n");  
+                //console.log("Found " + numb + " items");
+                let blockDecision = shouldBlock ? "YES" : "NO";
+                console.log("Should block: " + blockDecision);  
             }
             
             // Block image if needed
@@ -94,14 +96,15 @@ async function processImages()
             oneImage.style.visibility = 'visible';
             
             // If image was blocked, stop the loop
-            if (shouldBlock) break;
+            if (shouldBlock) break outer;
         }
 
         // Save finish time
         var b = performance.now();
         
         // Calculate working time
-        console.log("One image processed (Processing time: " + (b-a).toFixed(1) + "ms [" + (requestEndTime-requestStartTime).toFixed(1) +"ms for request])");
+        console.log("One image processed %c(Processing time: " + (b-a).toFixed(1) + "ms [" + (requestEndTime-requestStartTime).toFixed(1) +"ms for request])", "color: #0000ff");
+        console.log("\n");
     }
     console.log("Processing completed!-----------------------------------------------------------------------------------");
 }
@@ -119,7 +122,9 @@ async function processImage(image)
                 let words = this.responseText.replace(/,/g, '').toLowerCase();
 
                 requestEndTime = performance.now();
-                console.log(words);
+                let telemetryStartIndex = words.indexOf("[");
+                console.log("%c" + words.substring(telemetryStartIndex), "color: #0000ff");
+                words = words.split(0, telemetryStartIndex);
 
                 imageText =  this.responseText;
                 resolve();
@@ -146,7 +151,7 @@ async function processImage(image)
             xhttp.open("GET", SERVER_URL + "?q=" + window.location.href + "/" + image.src + "&t=relative", true);
             xhttp.send();
         }
-        console.log("Request sent --->");
+        console.log("Sent request to the server --->");
 
         requestStartTime = performance.now();
     });
@@ -180,7 +185,7 @@ async function processWords()
     // Checks which filters are ON
     let filtersStatus = {};
     console.log("Filters:--------------------------------");
-    for (let phobia of config.phobias)
+    for (let phobia of CONFIG.PHOBIAS)
     {
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
@@ -200,7 +205,7 @@ async function processWords()
     // Save start time
     var a = performance.now();
 
-    for (let phobia of config.phobias)
+    outer: for (let phobia of CONFIG.PHOBIAS)
     {
         shouldBlock = false;
 
@@ -213,19 +218,19 @@ async function processWords()
                 var regex = new RegExp('\\b' + keyword + '\\b');
                 while(allText.search(regex) != -1)
                 {
-                    console.log("Found keyword: " + keyword);
+                    //console.log("Found keyword: " + keyword);
                     numb++;
                     allText[allText.search(regex)] = "1";
-                    if (numb > 10) break;
+                    if (numb > CONFIG.SENSITIVITY_FOR_TEXT) break;
                 }
             }
-            if (numb > 2) shouldBlock = true;
+            if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) shouldBlock = true;
         
-            console.log("Found " + numb + " items"); 
-            console.log("Should block: " + shouldBlock);
-            console.log("\n");
+            //console.log("Found " + numb + " items"); 
+            let blockDecision = shouldBlock ? "YES" : "NO";
+            console.log("Should block: " + blockDecision); 
             
-            if (shouldBlock) break;
+            if (shouldBlock) break outer;
         }
 
     }
@@ -315,3 +320,10 @@ chrome.storage.sync.get('enabled', function(dataEnabled) {
         }
     });
 });
+
+function getStatus(status) {
+    if (status)
+        return "ON";
+    else
+        return "OFF";
+}

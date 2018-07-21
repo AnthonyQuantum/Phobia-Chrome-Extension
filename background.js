@@ -2,7 +2,7 @@
 chrome.runtime.onInstalled.addListener(function() {
   chrome.storage.sync.set({enabled: true}, function() {});
   chrome.storage.sync.set({warningEnabled: false}, function() {});
-  for (let item of config.phobias)
+  for (let item of CONFIG.PHOBIAS)
   {
     let obj = {};
     obj[item.title] = true;

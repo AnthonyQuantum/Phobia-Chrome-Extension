@@ -1,9 +1,14 @@
 // All data
-config = {
+CONFIG = {
     N: 3,
-    phobias: [
+    CONSOLE_LOGGING: true,
+    SENSITIVITY_FOR_IMAGE: 2,
+    SENSITIVITY_FOR_TEXT: 10,
+    LOCAL_URL: 'http://localhost:5000/',
+    HOST_URL: 'https://still-citadel-11543.herokuapp.com/',
+    PHOBIAS: [
         { 
-            title: 'DogBlocker',
+            title: 'DogBlocker', // Only for testing
             description: 'Test',
             keywords: ['dog', 'dogs', 'puppy', 'labrador', 'retriever', 'kuvasz', 'pomeranian', 'beagle', 'collie', 'bernard',
              'spaniel', 'samoyed', 'hound', "setter", 'terrier', 'shepherd']
@@ -27,3 +32,5 @@ config = {
         }
     ]
 }
+
+// TODO: add more filters and languages
