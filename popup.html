@@ -12,18 +12,20 @@
 
       <table>
         <tr>
-          <td><h2 class="label">Block images: </h2></td>
-          <td><label class="switch">
-            <input id="enabled" type="checkbox">
+          <td><h2 class="label" title="Deactivate the extension">OFF</h2></td>
+          <td><label class="switch" id="double-switch">
+            <input id="toggle-switcher" type="checkbox">
             <span class="slider round"></span>
           </label></td>
+          <td><h2 class="label" title="Activate the extension">ON</h2></td>
         </tr>
         <tr>
-          <td><h2 class="label">Show warnings:</h2></td>
-          <td><label class="switch">
-            <input id="warningEnabled" type="checkbox">
+          <td><h2 class="label" title="Scan and filter every image">Strict mode</h2></td>
+          <td><label class="switch" id="double-switch">
+            <input id="mode-switcher" type="checkbox">
             <span class="slider round"></span>
           </label></td>
+          <td><h2 class="label" title="Scan images only if page contains target keywords">Fast mode</h2></td>
         </tr>
       </table>
 

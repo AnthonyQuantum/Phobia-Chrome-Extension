@@ -1,4 +1,4 @@
-var SERVER_URL = CONFIG.LOCAL_URL;
+var SERVER_URL = CONFIG.AWS_URL;
 var BLOCKED_IMAGE_URL = SERVER_URL + 'warning.png';
 var LOGO_IMAGE_URL = SERVER_URL + 'logo.png';
 
@@ -123,7 +123,8 @@ async function processImage(image)
 
                 requestEndTime = performance.now();
                 let telemetryStartIndex = words.indexOf("[");
-                console.log("%c" + words.substring(telemetryStartIndex), "color: #0000ff");
+                //console.log("%c" + words.substring(telemetryStartIndex), "color: #0000ff");
+                console.log("%c" + words, "color: #0000ff");
                 words = words.split(0, telemetryStartIndex);
 
                 imageText =  this.responseText;
@@ -168,7 +169,16 @@ function showImages()
     {
         image.style.visibility = 'visible';
     }
-    //const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
+}
+
+function hideImages()
+{
+    // Make all images hidden
+    const images = document.getElementsByTagName("img");
+    for (let image of images)
+    {
+        image.style.visibility = 'hidden';
+    }
 }
 
 async function processWords()
@@ -193,11 +203,12 @@ async function processWords()
                 resolve();
             });
         });
-    
+
         // Wait for promise to complete
         let result = await promise;
         filtersStatus[phobia.title] = filterOn;
-        console.log(phobia.title + " filter is " + filterOn);
+        let textColor = filterOn ? "#00ff00" : "#ff0000";
+        console.log(phobia.title + " filter | " + "%c" + getStatus(filterOn), "color: " + textColor);
     }
     console.log("----------------------------------------");
     console.log("\n");
@@ -213,18 +224,27 @@ async function processWords()
         if (filtersStatus[phobia.title])
         {
             let numb = 0;
+            let totalNumb = 0;
             for (let keyword of phobia.keywords)
             {
                 var regex = new RegExp('\\b' + keyword + '\\b');
-                while(allText.search(regex) != -1)
+                var searchResult = allText.search(regex);
+                while(searchResult != -1)
                 {
-                    //console.log("Found keyword: " + keyword);
                     numb++;
-                    allText[allText.search(regex)] = "1";
-                    if (numb > CONFIG.SENSITIVITY_FOR_TEXT) break;
+                    console.log("Found keyword: " + keyword);
+                    allText[searchResult] = "***"; // Just mock symbol
+                    if (numb >= CONFIG.SENSITIVITY_FOR_KEYWORD) {
+                        totalNumb += numb;
+                        numb = 0;
+                        break;
+                    } 
+                }
+                if (totalNumb >= CONFIG.SENSITIVITY_FOR_TEXT) {
+                    shouldBlock = true;
+                    break;
                 }
             }
-            if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) shouldBlock = true;
         
             //console.log("Found " + numb + " items"); 
             let blockDecision = shouldBlock ? "YES" : "NO";
@@ -238,61 +258,8 @@ async function processWords()
     // Show warning if needed
     if (shouldBlock)
     {
-        var html = document.getElementsByTagName('html')[0];
-        html.style.background = '#01796f';
-
-        var title = document.createElement('p');
-        title.innerText = 'Blocked by Phobia';
-        title.style.top = '0px';
-
-        var logo = document.createElement('img');
-        logo.src = LOGO_IMAGE_URL;
-        logo.style.top = '100px';
-
-        var description = document.createElement('p');
-        description.innerText = 'This page may contain something nasty';
-        description.style.top = '200px';
-
-        var showButton = document.createElement('button');
-        showButton.innerText = 'I understand, show anyway';
-        showButton.style.background = 'white';
-        showButton.style.border = '0';
-        showButton.style.padding = '10px';
-        showButton.style.top = '300px';
-
-        var elements = [title, logo, description, showButton];
-
-        showButton.addEventListener('click', function() {
-            // Make all HTML visible
-            html.style.visibility = 'visible';
-            html.style.removeProperty('background', '#01796f');
-            showImages();
-
-            for (let item of elements) item.style.visibility = 'hidden';
-        });
-
-        var textElements = [title, description];
-        for (let item of textElements)
-        {
-            item.style.color = 'white';
-            item.style.fontSize = '3em';
-        }
-
-        for (let item of elements)
-        {
-            item.style.position = 'absolute';
-            item.style.visibility = 'visible';
-            item.style.left = '50%';
-            item.style.transform = 'translate(-50%, 0)';
-            html.appendChild(item);
-        }
-
-    }
-    else
-    {
-        // Make all HTML visible
-        document.getElementsByTagName('html')[0].style.visibility = 'visible';
-        showImages();
+        hideImages();
+        processImages();
     }
     
     // Save finish time
@@ -302,21 +269,20 @@ async function processWords()
     console.log("Processing completed!-----------------------------------------------------------------------------------");
 }
 
-chrome.storage.sync.get('enabled', function(dataEnabled) {
-    chrome.storage.sync.get('warningEnabled', function(dataWarningEnabled) {
-        if (dataWarningEnabled.warningEnabled)
-        {
-            processWords();
-        }
-        else
-        {
-            if (dataEnabled.enabled)
+chrome.storage.sync.get('enabled', function(_a) {
+    chrome.storage.sync.get('extensionWorking', function(_b) {
+        if (_b.extensionWorking) {
+            if (!_a.enabled) // Strict mode
                 processImages();
-            else
-            {
+            else { // Fast mode
                 showImages();
                 const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
+                processWords();
             }
+        }
+        else {
+            showImages();
+            const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
         }
     });
 });

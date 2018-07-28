@@ -51,20 +51,23 @@ async function constructFilters() {
 }
 constructFilters();
 
-// Set enable/disable slides their values
-let sliders = ['enabled', 'warningEnabled'];
-for (let slider of sliders)
-{
-    // DEV what is it for ???
-    chrome.storage.sync.get(slider, function(data) {
-        if (data[slider]) document.getElementById(slider).setAttribute('checked', '');
-    });
-
-    // Save value of the checkbox (slider)
-    const sliderElement = document.getElementById(slider);
-    sliderElement.addEventListener('click', function() {
-        let obj = {};
-        obj[slider] = !sliderElement.hasAttribute('checked');
-        chrome.storage.sync.set(obj, function() { });
+chrome.storage.sync.get('enabled', function(data) {
+    if (data['enabled']) document.getElementById('mode-switcher').setAttribute('checked', '');
 });
-}
+chrome.storage.sync.get('extensionWorking', function(data) {
+    if (data['extensionWorking']) document.getElementById('toggle-switcher').setAttribute('checked', '');
+});
+
+// Save value of the checkbox (slider)
+const sliderElement1 = document.getElementById('mode-switcher');
+sliderElement1.addEventListener('click', function() {
+    let obj = {};
+    obj['enabled'] = !sliderElement1.hasAttribute('checked');
+    chrome.storage.sync.set(obj, function() { });
+});
+const sliderElement2 = document.getElementById('toggle-switcher');
+sliderElement2.addEventListener('click', function() {
+    let obj = {};
+    obj['extensionWorking'] = !sliderElement2.hasAttribute('checked');
+    chrome.storage.sync.set(obj, function() { });
+});

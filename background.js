@@ -1,7 +1,7 @@
 // Settting default values on extension installation
 chrome.runtime.onInstalled.addListener(function() {
   chrome.storage.sync.set({enabled: true}, function() {});
-  chrome.storage.sync.set({warningEnabled: false}, function() {});
+  chrome.storage.sync.set({extensionWorking: true}, function() {});
   for (let item of CONFIG.PHOBIAS)
   {
     let obj = {};
