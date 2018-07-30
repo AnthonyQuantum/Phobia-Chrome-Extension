@@ -1,7 +1,7 @@
 {
     "name": "Phobia",
-    "version": "1.0",
-    "description": "Phobia will make your web browsing more comfortable by blocking images and pages that contain something you are afraid of.",
+    "version": "1.1",
+    "description": "Phobia will make your web browsing more comfortable by blocking images that contain something you are afraid of.",
     "permissions": ["webNavigation", "*://*/*", "activeTab", "declarativeContent", "storage"],
     "background": {
       "scripts": ["config.js", "background.js"],
@@ -15,7 +15,7 @@
         "48": "images/48.png",
         "128": "images/128.png"
       },
-      "default_title": "Filters out all nasty content"
+      "default_title": "Blocks all nasty content"
     },
     "icons": {
       "16": "images/16.png",

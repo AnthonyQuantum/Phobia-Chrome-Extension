@@ -1,30 +1,27 @@
+// Builds all filter sliders
 async function constructFilters() {
-    // Get filters div element
+    // Gets target div element
     const filters = document.getElementById('filters');
 
     let checked = false;
     for (let phobia of CONFIG.PHOBIAS) {
-
-        // Checks whether filter is ON
+        // Checks whether filter is ON or OFF
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
                 checked = data[phobia.title];
                 resolve();
             });
         });
-
-        // Wait for promise to complete
         let result = await promise;
 
-        // Generate the options popup
+        // Generates filter sliders HTML
         let filter = document.createElement('tr');
         let firstColumn = document.createElement('td');
         let secondColumn = document.createElement('td');
         let br = document.createElement('br');
         let title = document.createElement('span');
-        title.innerText = phobia.title;
+        title.innerText = phobia.title + " (" + phobia.description + ")";
         title.classList.add('label');
-        title.setAttribute('title', phobia.description);
         let label = document.createElement('label');
         label.classList.add('switch');
         let input = document.createElement('input');
@@ -51,23 +48,16 @@ async function constructFilters() {
 }
 constructFilters();
 
-chrome.storage.sync.get('enabled', function(data) {
-    if (data['enabled']) document.getElementById('mode-switcher').setAttribute('checked', '');
-});
-chrome.storage.sync.get('extensionWorking', function(data) {
-    if (data['extensionWorking']) document.getElementById('toggle-switcher').setAttribute('checked', '');
-});
-
-// Save value of the checkbox (slider)
-const sliderElement1 = document.getElementById('mode-switcher');
-sliderElement1.addEventListener('click', function() {
-    let obj = {};
-    obj['enabled'] = !sliderElement1.hasAttribute('checked');
-    chrome.storage.sync.set(obj, function() { });
-});
-const sliderElement2 = document.getElementById('toggle-switcher');
-sliderElement2.addEventListener('click', function() {
-    let obj = {};
-    obj['extensionWorking'] = !sliderElement2.hasAttribute('checked');
-    chrome.storage.sync.set(obj, function() { });
-});
+// Activates main toggle sliders
+let sliders = ['enabled', 'extensionWorking'];
+for (let slider of sliders) {
+    chrome.storage.sync.get(slider, function(data) {
+        if (data[slider]) document.getElementById(slider + '-switcher').setAttribute('checked', '');
+    });
+    let sliderElement = document.getElementById(slider + '-switcher');
+    sliderElement.addEventListener('click', function() {
+        let obj = {};
+        obj[slider] = !sliderElement.hasAttribute('checked');
+        chrome.storage.sync.set(obj, function() { });
+    });
+}

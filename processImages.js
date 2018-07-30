@@ -2,102 +2,91 @@ var SERVER_URL = CONFIG.AWS_URL;
 var BLOCKED_IMAGE_URL = SERVER_URL + 'warning.png';
 var LOGO_IMAGE_URL = SERVER_URL + 'logo.png';
 
+// Disable console logging if needed
 if (!CONFIG.CONSOLE_LOGGING) console.log = function() {};
 
-var requestStartTime, requestEndTime;
+// Declare variables
+var requestStartTime, requestEndTime, pageProcessingTime;
+var allText, filtersStatus, images;
 
-async function processImages()
-{
-    // Make all HTML visible
-    const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
+// Reload page (and extension) after every YouTube navigation event
+const body = document.getElementsByTagName('body')[0];
+body.addEventListener("yt-navigate-finish", function(event) {
+    location.reload();
+});
 
-    // Get all images from the current page
-    const images = document.getElementsByTagName("img");
+processPage(); // main function
 
-    // Set initial values
-    let filterOn = false;
-    let shouldBlock = false;
-
-    // Checks which filters are ON
-    let filtersStatus = {};
-    console.log("Filters:--------------------------------");
-    for (let phobia of CONFIG.PHOBIAS)
-    {
-        let promise = new Promise((resolve, reject) => {
-            chrome.storage.sync.get(phobia.title, function(data) {
-                filterOn = data[phobia.title];
-                resolve();
-            });
+function processPage() {
+    chrome.storage.sync.get('enabled', function(_a) {
+        chrome.storage.sync.get('extensionWorking', function(_b) {
+            showHTML();
+            if (_b.extensionWorking) {
+                if (!_a.enabled) { // Strict mode
+                    getFilters(processImages); // Get filter statuses and then process images
+                }
+                else { // Fast mode
+                    showImages();
+                    getFilters(processWords); // Get filter statuses and then process words
+                }
+            }
+            else { // extension is OFF
+                showImages();
+            }
         });
+    });
+}
 
-        // Wait for promise to complete
-        let result = await promise;
-        filtersStatus[phobia.title] = filterOn;
-        let textColor = filterOn ? "#00ff00" : "#ff0000";
-        console.log(phobia.title + " filter | " + "%c" + getStatus(filterOn), "color: " + textColor);
+async function processWords(filters)
+{
+    filtersStatus = filters;
+    allText = getAllText();
+
+    // Save start time
+    var a = performance.now();
+
+    // Start image processing if needed
+    if (hasKeywords(filtersStatus, allText.split(' '), CONFIG.SENSITIVITY_FOR_TEXT)) {
+        hideImages();
+        processImages(filtersStatus);
+    } else {
+        // Save finish time
+        var b = performance.now();
+        console.log("One page processed (Processing time: " + (b-a).toFixed(1) + "ms");
+        console.log("Processing completed!-----------------------------------------------------------------------------------");
     }
-    console.log("----------------------------------------");
-    console.log("\n");
+}
+
+async function processImages(filters)
+{
+    filtersStatus = filters;
+    images = getAllImages();
 
     // Process each image on the page
-    for (let oneImage of images)
+    for (let image of images)
     {
         // Save start time
         var a = performance.now();
 
-        shouldBlock = false;
-        let imageKeywords;
+        // Process one image and get its keywords
+        var imageKeywords = await processImage(image);
 
-        let processPromise = new Promise(async function func(resolve, reject)  {
-            imageKeywords = await processImage(oneImage);
-            resolve();
-        });
-
-        let processResult = await processPromise;
-
-        outer: for (let phobia of CONFIG.PHOBIAS)
+        // Block image if needed
+        if (hasKeywords(filtersStatus, imageKeywords.split(' '), CONFIG.SENSITIVITY_FOR_IMAGE))
         {
-            // If filter is ON, check whether page contains any of the keywords
-            if (filtersStatus[phobia.title])
-            {
-                let numb = 0;
-                for (let keyword of phobia.keywords)
-                {
-                    var regex = new RegExp('\\b' + keyword + '\\b');
-                    while(imageKeywords.search(regex) != -1)
-                    {
-                        //console.log("Found keyword: " + keyword);
-                        numb++;
-                        imageKeywords[imageKeywords.search(regex)] = "1";
-                        if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) break;
-                    }
-                }
-                if (numb > CONFIG.SENSITIVITY_FOR_IMAGE) shouldBlock = true;
-            
-                //console.log("Found " + numb + " items");
-                let blockDecision = shouldBlock ? "YES" : "NO";
-                console.log("Should block: " + blockDecision);  
-            }
-            
-            // Block image if needed
-            if (shouldBlock)
-            {
-                oneImage.setAttribute('oldSrc', oneImage.getAttribute('src'));
-                oneImage.removeAttribute('src');
-                oneImage.style.maxHeight = '512px';
-                oneImage.style.maxWidth = '512px';
-                oneImage.style.background = '#000'
-                oneImage.src = BLOCKED_IMAGE_URL;
-                oneImage.addEventListener('click', function() {
-                    oneImage.src = oneImage.getAttribute('oldSrc');
-                    oneImage.removeAttribute('oldSrc');
-                });
-            }
-            oneImage.style.visibility = 'visible';
-            
-            // If image was blocked, stop the loop
-            if (shouldBlock) break outer;
+            // Add "blocked by Phobia" cover
+            image.setAttribute('oldSrc', image.getAttribute('src'));
+            image.removeAttribute('src');
+            image.style.maxHeight = '512px';
+            image.style.maxWidth = '512px';
+            image.style.background = '#000'
+            image.src = BLOCKED_IMAGE_URL;
+            image.addEventListener('click', function() {
+                image.src = image.getAttribute('oldSrc');
+                image.removeAttribute('oldSrc');
+            });
         }
+        image.style.visibility = 'visible';
 
         // Save finish time
         var b = performance.now();
@@ -109,26 +98,18 @@ async function processImages()
     console.log("Processing completed!-----------------------------------------------------------------------------------");
 }
 
-async function processImage(image)
+function processImage(image)
 {
-    let imageText;
-
-    let imagePromise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve, reject) => {
 
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-
-                let words = this.responseText.replace(/,/g, '').toLowerCase();
-
+                var responseKeywords = this.responseText.replace(/,/g, '').toLowerCase().replace(/ *\[[^\]]*\] */g, "").replace(/\n/g, " ");
+                
+                //console.log("%c" + responseKeywords, "color: #0000ff");
                 requestEndTime = performance.now();
-                let telemetryStartIndex = words.indexOf("[");
-                //console.log("%c" + words.substring(telemetryStartIndex), "color: #0000ff");
-                console.log("%c" + words, "color: #0000ff");
-                words = words.split(0, telemetryStartIndex);
-
-                imageText =  this.responseText;
-                resolve();
+                resolve(responseKeywords);
             }
         };
 
@@ -156,9 +137,12 @@ async function processImage(image)
 
         requestStartTime = performance.now();
     });
-    
-    let processImageResult = await imagePromise;
-    return imageText;
+
+    return promise;
+}
+
+function showHTML() {
+    document.getElementsByTagName('html')[0].style.visibility = 'visible';
 }
 
 function showImages()
@@ -181,115 +165,103 @@ function hideImages()
     }
 }
 
-async function processWords()
-{
+// true/false --> ON/OFF
+function getStatus(status) {
+    if (status)
+        return "ON";
+    else
+        return "OFF";
+}
+
+// true/false --> YES/NO
+function getDecision(decision) {
+    if (decision)
+        return "YES";
+    else
+        return "NO";
+}
+
+function getAllText() {
     // Get all text from the page
-    var allText = document.body.textContent;
-    // Replace all special characters with space
-    allText = allText.replace(/[^a-zA-Z ]/g, ' ');
+    var _text = document.body.textContent;
 
-    // Set initial values
-    let filterOn = false;
-    let shouldBlock = false;
+    // Remove special characters and unwanted words
+    _text = _text.replace(/ *\{[^}]*\} */g, "").replace(/ *\[[^\]]*\] */g, "").replace(/\.[a-zA-Z]/g, "").replace(/\,[a-zA-Z]/g, "").replace(/[^a-zA-Z ]/g, ' ').replace(/\b[a-zA-Z]{1,2}\b/g, '');
+    var unwantedWords = ['function', 'null', 'return', 'prototype', 'void', 'return', 'var', 'not', 'try', 'catch', 'this', 'else', 'new'];
+    var regex;
+    for (let word of unwantedWords) {
+        regex = new RegExp('\\b' + word + '\\b', 'g');
+        _text = _text.replace(regex, "");
+    }
+    _text = _text.replace(/\s\s+/g, ' ').toLowerCase();
 
-    // Checks which filters are ON
-    let filtersStatus = {};
+    return _text;
+}
+
+function getAllImages() {
+    return document.getElementsByTagName("img");
+}
+
+async function getFilters(callback) {
+    var _filters = {};
+
+    // Get filter statuses
     console.log("Filters:--------------------------------");
     for (let phobia of CONFIG.PHOBIAS)
     {
+        let filterOn = false;
         let promise = new Promise((resolve, reject) => {
             chrome.storage.sync.get(phobia.title, function(data) {
                 filterOn = data[phobia.title];
                 resolve();
             });
         });
-
-        // Wait for promise to complete
         let result = await promise;
-        filtersStatus[phobia.title] = filterOn;
+
+        _filters[phobia.title] = filterOn;
         let textColor = filterOn ? "#00ff00" : "#ff0000";
         console.log(phobia.title + " filter | " + "%c" + getStatus(filterOn), "color: " + textColor);
     }
     console.log("----------------------------------------");
     console.log("\n");
 
-    // Save start time
-    var a = performance.now();
+    callback(_filters);
+}
 
-    outer: for (let phobia of CONFIG.PHOBIAS)
-    {
-        shouldBlock = false;
+function hasKeywords(filters, text, sensitivity) {
+    var _shouldBlock;
 
-        // If filter is ON, check whether page contains any of the keywords
-        if (filtersStatus[phobia.title])
-        {
-            let numb = 0;
-            let totalNumb = 0;
-            for (let keyword of phobia.keywords)
-            {
-                var regex = new RegExp('\\b' + keyword + '\\b');
-                var searchResult = allText.search(regex);
-                while(searchResult != -1)
-                {
-                    numb++;
-                    console.log("Found keyword: " + keyword);
-                    allText[searchResult] = "***"; // Just mock symbol
-                    if (numb >= CONFIG.SENSITIVITY_FOR_KEYWORD) {
-                        totalNumb += numb;
-                        numb = 0;
-                        break;
-                    } 
+    outer: for (let phobia of CONFIG.PHOBIAS) {
+        _shouldBlock = false;
+
+        // If filter is ON, check if page contains any of the keywords
+        if (filters[phobia.title]) {
+            let keywordsCount = 0;
+            let totalKeywordsCount = 0;
+
+            for (let keyword of phobia.keywords) {
+                for (let i = 0; i < text.length; ++i) {
+                    if (text[i] == keyword) {
+                        keywordsCount++;
+                        console.log("Found keyword: " + keyword);
+                        text[i] = "***"; // Just mock symbol
+                        if (keywordsCount >= sensitivity) {
+                            totalKeywordsCount += keywordsCount;
+                            keywordsCount = 0;
+                            break;
+                        } 
+                    }
                 }
-                if (totalNumb >= CONFIG.SENSITIVITY_FOR_TEXT) {
-                    shouldBlock = true;
+                if (totalKeywordsCount >= sensitivity) {
+                    _shouldBlock = true;
                     break;
                 }
             }
-        
-            //console.log("Found " + numb + " items"); 
-            let blockDecision = shouldBlock ? "YES" : "NO";
-            console.log("Should block: " + blockDecision); 
+            console.log("Should block: " + getDecision(_shouldBlock)); 
             
-            if (shouldBlock) break outer;
+            if (_shouldBlock) break outer;
         }
-
     }
 
-    // Show warning if needed
-    if (shouldBlock)
-    {
-        hideImages();
-        processImages();
-    }
-    
-    // Save finish time
-    var b = performance.now();
-    // Calculate working time
-    console.log("One page processed (Processing time: " + (b-a).toFixed(1) + "ms");
-    console.log("Processing completed!-----------------------------------------------------------------------------------");
-}
-
-chrome.storage.sync.get('enabled', function(_a) {
-    chrome.storage.sync.get('extensionWorking', function(_b) {
-        if (_b.extensionWorking) {
-            if (!_a.enabled) // Strict mode
-                processImages();
-            else { // Fast mode
-                showImages();
-                const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
-                processWords();
-            }
-        }
-        else {
-            showImages();
-            const html = document.getElementsByTagName('html')[0].style.visibility = 'visible';
-        }
-    });
-});
-
-function getStatus(status) {
-    if (status)
-        return "ON";
-    else
-        return "OFF";
+    return _shouldBlock;
 }

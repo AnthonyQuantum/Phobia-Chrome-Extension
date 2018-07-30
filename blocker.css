@@ -1,3 +1,4 @@
+/* Hide all html and images before showing them to user (faster than JS)*/
 html, img {
     visibility: hidden;
 }

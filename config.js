@@ -1,14 +1,33 @@
-// All data
 CONFIG = {
-    N: 3,
     CONSOLE_LOGGING: true,
     SENSITIVITY_FOR_IMAGE: 2,
-    SENSITIVITY_FOR_TEXT: 10,
-    SENSITIVITY_FOR_KEYWORD: 10,
-    LOCAL_URL: 'http://localhost:5000/',
-    HEROKU_URL: 'https://still-citadel-11543.herokuapp.com/',
+    SENSITIVITY_FOR_TEXT: 2,
+    LOCAL_URL: 'http://localhost:5000/', // For testing purposes only
     AWS_URL: 'http://phobia.us-east-2.elasticbeanstalk.com/',
     PHOBIAS: [
+        { 
+            title: 'Arachnophobia',
+            description: 'Spiders',
+            keywords: ['spider', 'arachnid', 'tarantula',
+             'scorpion']
+        },
+        {
+            title: 'Insectophobia',
+            description: 'Insects',
+            keywords: ['insect', 'spider', 'bug', 'pest',
+             'beetle', 'anthropod', 'fly', 'bee', 'worm',
+             'caterpillar', 'ant', 'aphid', 'butterfly',
+             'cockroach', 'dragonfly', 'flea', 'ixodes',
+             'grasshopper', 'ladybug', 'mite', 'mosquito',
+             'moth', 'termite', 'centipede', 'acarine']
+        },
+        {
+            title: 'Ophidiophobia',
+            description: 'Snakes',
+            keywords: ['snake', 'ophidian', 'serpent',
+             'constrictor', 'python', 'cobra',
+             'rattlesnake', 'viper', 'mamba', 'krait']
+        },
         { 
             title: 'Cynophobia',
             description: 'Dogs',
@@ -22,27 +41,6 @@ CONFIG = {
              'dalmatian', 'pug', 'spitz', 'griffon',
              'corgi', 'poodle', 'deerhound', 'bloodhound',
              'wolfhound', 'chow']
-            /*keywords_lang: {
-                RU: ['собака', 'собаки', 'щенок'],
-                DU: ['hond', 'honden', 'brak']
-            }*/
-        },
-        { 
-            title: 'Arachnophobia',
-            description: 'Spiders',
-            keywords: ['spider', 'arachnid', 'tarantula']
-        },
-        {
-            title: 'Insectophobia',
-            description: 'Insects',
-            keywords: ['insect', 'spider', 'bug', 'pest', 'beetle', 'anthropod', 'fly', 'bee', 'worm', 'caterpillar',
-             'ant', 'aphid', 'butterfly', 'cockroach', 'dragonfly', 'flea', 'grasshopper', 'ladybug', 'mite', 'mosquito',
-             'moth', 'termite']
-        },
-        {
-            title: 'Emetophobia',
-            description: 'Vomit',
-            keywords: ['vomit', 'puke', 'disgorge', 'spew']
         }
     ]
 }
