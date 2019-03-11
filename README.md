@@ -10,4 +10,5 @@ The text scan happens on the client side, so it is absolutely private. Phobia do
 Phobia uses pre-trained Inception v3 model and simple image classifier.
 
 How it looks:
+
 ![Look](images/Extension.png)
