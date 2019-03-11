@@ -6,9 +6,13 @@ At first, Phobia scans all the text you see. If it finds some "keywords", it sta
 
 The text scan happens on the client side, so it is absolutely private. Phobia does not have any databases and does not store your private data.
 
+## Technologies
+
+HTML/CSS/JavaScript
+
 ![Structure](images/Structure.png)
 Phobia uses pre-trained Inception v3 model and simple image classifier.
 
-How it looks:
+## How it looks:
 
 ![Look](images/Extension.png)
